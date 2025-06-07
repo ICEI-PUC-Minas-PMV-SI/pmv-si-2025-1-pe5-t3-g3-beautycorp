@@ -13,7 +13,8 @@ Este repositório serve como documentação para o projeto Beauty Corp. Este pro
 
 ## 🛠️ Ferramentas Utilizadas (Opcional)
 
-* Plataforma AWS - Para [configuração de servidores e instâncias]
+* Cisco Packet Tracer - Para [Projeção e planejamento de redes]
+* Plataforma AWS - Para [Configuração de servidores e instâncias]
 * Virtual Box - Para [Criação de máquinas virtuais e configuração de servidores e instâncias]
 * Zabbix - Para [Monitoramento de redes]
 * Sistema Operacional: [Windows 12, Ubuntu 22.04]

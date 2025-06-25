@@ -1,0 +1,40 @@
+# Análise de Vulnerabilidade do CRUD da BeautyCorp
+
+Este documento apresenta uma análise de vulnerabilidade inicial para o sistema CRUD (Create, Read, Update, Delete) do website da BeautyCorp. O objetivo desta análise é identificar potenciais fraquezas e exposições de segurança que poderiam ser exploradas por atacantes, comprometendo a integridade, confidencialidade e disponibilidade dos dados e operações da empresa. A aplicação em questão é desenvolvida em .NET 8, utiliza Swagger para documentação e está hospedada na infraestrutura da Amazon Web Services (AWS).
+
+A postura de segurança de uma aplicação web, especialmente uma que gerencia dados de clientes e operações logísticas, é crucial. Falhas de segurança podem levar a vazamento de dados sensíveis, interrupção de serviços, perdas financeiras e danos significativos à reputação da BeautyCorp, que tem como missão a inovação e a responsabilidade social.
+
+## Metodologia
+
+O escopo abrange a API de logística exposta, o ambiente de execução na AWS e as configurações de segurança observadas. As categorias de vulnerabilidade focadas incluem as mais comuns em aplicações web e APIs, conforme o OWASP Top 10.
+
+## Falhas Identificadas e Detalhamento
+
+### Exposição Indevida do Ambiente de Desenvolvimento e Swagger UI
+
+**Descrição:** O Swagger UI, que documenta a API com detalhes sobre endpoints, métodos, parâmetros e esquemas, está acessível publicamente através de um endereço IP da AWS: `http://34.228.20.145:5000/swagger/index.html`. Além disso, a aplicação está rodando com a variável de ambiente `ASPNETCORE_ENVIRONMENT` configurada como `Development`, conforme evidenciado pelos logs do console.
+
+**Impacto:**
+
+* **Mapeamento Completo da API:** Atacantes têm um "mapa" detalhado de toda a API, facilitando a identificação de pontos de entrada para testes de vulnerabilidade como injeção de SQL, controle de acesso quebrado, etc.
+* **Vazamento de Informações Sensíveis:** Ambientes de desenvolvimento em .NET Core frequentemente exibem mensagens de erro detalhadas (stack traces) que podem vazar informações críticas sobre o sistema, banco de dados, e estrutura interna da aplicação, que não deveriam ser expostas em produção.
+* **Funcionalidades de Depuração Expostas:** Recursos de depuração e middlewares não seguros para produção podem estar ativos, abrindo portas para ataques.
+
+### Quebra de Autenticação e Gerenciamento de Sessão
+
+**Descrição:** A aplicação utiliza um sistema de autenticação baseado em tokens, onde login e senha são trocados por um token que é subsequentemente usado para acessar a API. No entanto, a ausência de recuperação de senha e autenticação de dois fatores (2FA), combinada com a falta de informações sobre a robustez do hash de senha, introduz vários riscos.
+
+**Impacto:**
+
+* **Ataques de Força Bruta/Credential Stuffing:** Sem limitação de tentativas de login ou CAPTCHA, atacantes podem tentar adivinhar credenciais de forma repetitiva ou usar listas de credenciais vazadas para obter acesso.
+* **Vulnerabilidades de Token:** Se os tokens não forem gerados de forma segura (previsíveis, com tempo de expiração excessivo, sem assinatura criptográfica forte), um atacante pode sequestrar ou forjar tokens para obter acesso não autorizado.
+* **Reuso de Senhas:** A ausência de 2FA torna o login mais vulnerável a ataques de phishing ou se as senhas forem comprometidas em outros serviços, permitindo o reuso.
+* **Bloqueio de Contas:** A falta de recuperação de senha pode impedir usuários legítimos de acessar suas contas se esquecerem a senha, impactando a usabilidade.
+
+### Potencial Quebra de Controle de Acesso
+
+**Descrição:** A API expõe endpoints com operações de GET, POST, PUT e DELETE para recursos como: `Romaneio`, `Cliente`, `Carga`, `Viagem`, entre outros. Endpoints como: `/viagem/{id}` permitem a manipulação de objetos específicos por ID. Sem um mecanismo de controle de acesso robusto implementado no backend, usuários autenticados (ou mesmo não autenticados, se não houver autenticação adequada) podem ser capazes de acessar, modificar ou deletar registros que não lhes pertencem ou para os quais não possuem permissão.
+
+**Impacto:**
+
+* **Insecure Direct Object References (IDOR):** Um atacante pode alterar um ID em uma requisição (ex
